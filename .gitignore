@@ -8,3 +8,9 @@
 /build
 /captures
 .externalNativeBuild
+
+.idea
+.idea/
+app/libs/
+serialportlib/libs/
+serialportlib/src/main/res/drawable/

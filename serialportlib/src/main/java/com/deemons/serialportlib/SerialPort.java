@@ -41,7 +41,27 @@ public class SerialPort {
     private FileInputStream  mFileInputStream;
     private FileOutputStream mFileOutputStream;
 
-    public SerialPort(File device, int baudrate, int flags) throws SecurityException, IOException {
+
+    public SerialPort(File device, int baudrate) throws SecurityException, IOException {
+        this(device, baudrate, 0);
+    }
+
+
+    public SerialPort(File file, int baudrate, int flags) throws SecurityException, IOException {
+        this(file, baudrate, 0, 8, 1, flags);
+    }
+
+
+
+    /**
+     * 打开串口
+     *@param device 串口设备文件
+     *@param baudrate 波特率，一般是9600
+     *@param parity 奇偶校验，0 None, 1 Odd, 2 Even
+     *@param dataBits 数据位，5 - 8
+     *@param stopBit 停止位，1 或 2
+     */
+    public SerialPort(File device, int baudrate,int parity, int dataBits, int stopBit, int flags) throws SecurityException, IOException {
 
         /* Check access permission */
         if (!device.canRead() || !device.canWrite()) {
@@ -60,7 +80,7 @@ public class SerialPort {
             }
         }
 
-        mFd = open(device.getAbsolutePath(), baudrate, flags);
+        mFd = open(device.getAbsolutePath(), baudrate, parity,dataBits,stopBit, flags);
         if (mFd == null) {
             Log.e(TAG, "native open returns null");
             throw new IOException();
@@ -69,18 +89,7 @@ public class SerialPort {
         mFileOutputStream = new FileOutputStream(mFd);
     }
 
-    public SerialPort(String devicePath, int baudrate, int flags)
-        throws SecurityException, IOException {
-        this(new File(devicePath), baudrate, flags);
-    }
 
-    public SerialPort(File device, int baudrate) throws SecurityException, IOException {
-        this(device, baudrate, 0);
-    }
-
-    public SerialPort(String devicePath, int baudrate) throws SecurityException, IOException {
-        this(new File(devicePath), baudrate, 0);
-    }
 
     // Getters and setters
     public InputStream getInputStream() {
@@ -92,7 +101,7 @@ public class SerialPort {
     }
 
     // JNI
-    private native static FileDescriptor open(String path, int baudrate, int flags);
+    private native static FileDescriptor open(String path, int baudrate, int parity, int dataBits, int stopBit, int flags);
 
     public native void close();
 

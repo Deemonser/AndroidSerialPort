@@ -57,12 +57,22 @@ static speed_t getBaudrate(jint baudrate)
     }
 }
 
+static void throwException(JNIEnv *env, const char *name, const char *msg)
+{
+    jclass cls = env->FindClass(name);
+    /* if cls is NULL, an exception has already been thrown */
+    if (cls != NULL) {
+        env->ThrowNew(cls, msg);
+    }
 
+    /* free the local ref */
+    env->DeleteLocalRef(cls);
+}
 
 extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_deemons_serialportlib_SerialPort_open
-        (JNIEnv *env, jobject instance, jstring path, jint baudrate, jint flags)
+        (JNIEnv *env, jobject instance, jstring path, jint baudrate,jint parity, jint dataBits, jint stopBit, jint flags)
 {
     int fd;
     speed_t speed;
@@ -72,8 +82,19 @@ Java_com_deemons_serialportlib_SerialPort_open
     {
         speed = getBaudrate(baudrate);
         if (speed == -1) {
-            /* TODO: throw an exception */
-            LOGE("Invalid baudrate");
+            throwException(env, "java/lang/IllegalArgumentException", "Invalid baudrate");
+            return NULL;
+        }
+        if (parity <0 || parity>2) {
+            throwException(env, "java/lang/IllegalArgumentException", "Invalid parity");
+            return NULL;
+        }
+        if (dataBits <5 || dataBits>8) {
+            throwException(env, "java/lang/IllegalArgumentException", "Invalid dataBits");
+            return NULL;
+        }
+        if (stopBit <1 || stopBit>2) {
+            throwException(env, "java/lang/IllegalArgumentException", "Invalid stopBit");
             return NULL;
         }
     }
@@ -88,9 +109,7 @@ Java_com_deemons_serialportlib_SerialPort_open
         env->ReleaseStringUTFChars(path, path_utf);
         if (fd == -1)
         {
-            /* Throw an exception */
-            LOGE("Cannot open port");
-            /* TODO: throw an exception */
+            throwException(env, "java/io/IOException", "Cannot open port");
             return NULL;
         }
     }
@@ -103,13 +122,30 @@ Java_com_deemons_serialportlib_SerialPort_open
         {
             LOGE("tcgetattr() failed");
             close(fd);
-            /* TODO: throw an exception */
+            throwException(env, "java/io/IOException", "tcgetattr() failed");
             return NULL;
         }
 
         cfmakeraw(&cfg);
         cfsetispeed(&cfg, speed);
         cfsetospeed(&cfg, speed);
+
+        /* More attribute set */
+        switch (parity) {
+            case 0: break;
+            case 1: cfg.c_cflag |= PARENB; break;
+            case 2: cfg.c_cflag &= ~PARODD; break;
+        }
+        switch (dataBits) {
+            case 5: cfg.c_cflag |= CS5; break;
+            case 6: cfg.c_cflag |= CS6; break;
+            case 7: cfg.c_cflag |= CS7; break;
+            case 8: cfg.c_cflag |= CS8; break;
+        }
+        switch (stopBit) {
+            case 1: cfg.c_cflag &= ~CSTOPB; break;
+            case 2: cfg.c_cflag |= CSTOPB; break;
+        }
 
         if (tcsetattr(fd, TCSANOW, &cfg))
         {
