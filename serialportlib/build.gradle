@@ -42,3 +42,29 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
+
+
+//apply plugin: 'maven'
+//uploadArchives{
+//    repositories.mavenDeployer{
+//        // 本地仓库路径
+//        repository(url:"file:/Users/deemons/.m2/repository")
+//        // 唯一标识
+//        pom.groupId = "com.deemons.serialport"
+//        // 项目名称
+//        pom.artifactId = "serialport"
+//        // 版本号
+//        pom.version = "1.0.0"
+//    }
+//}
+
+//for upload
+apply plugin: 'com.novoda.bintray-release'
+publish {
+    userOrg = 'deemons' //注册的用户名
+    groupId = 'com.deemons.serialport' //引用时第一部分
+    artifactId = 'serialport' //引用时的第二部分
+    publishVersion = '1.0.0' //引用时的第三部分，版本号
+    desc = 'android serialport'//描述
+    website = 'https://github.com/Deemonser/AndroidSerialPort'//项目地址
+}

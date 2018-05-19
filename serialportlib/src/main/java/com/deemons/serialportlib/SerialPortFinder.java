@@ -13,8 +13,7 @@ import java.util.Vector;
  * date:    2018/5/18
  * desc:
  */
-public class SerialPortFinder{
-
+public class SerialPortFinder {
 
     public class Driver {
         public Driver(String name, String root) {

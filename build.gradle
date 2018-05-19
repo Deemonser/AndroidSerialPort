@@ -8,8 +8,9 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.2'
-        
 
+        //首先添加这个
+        classpath 'com.novoda:bintray-release:+'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -19,9 +20,22 @@ allprojects {
     repositories {
         google()
         jcenter()
+//        mavenLocal()
+        maven {url "https://dl.bintray.com/deemons/maven"}
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+//开源库中有中文注释,添加下面这些
+allprojects {
+    tasks.withType(Javadoc) {
+        options {
+            encoding "UTF-8"
+            charSet 'UTF-8'
+            links "http://docs.oracle.com/javase/7/docs/api"
+        }
+    }
 }
