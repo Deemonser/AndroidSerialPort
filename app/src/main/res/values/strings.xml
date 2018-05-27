@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">Android SerialPort</string>
+    <string name="app_name">SerialPort</string>
+    <string name="title_activity_main">串口调试工具</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+    <string name="permission_error">获取 root 权限失败！\n 一般 su 路径为：\n /system/bin/su 或 /system/xbin/su 。\n当前 su 路径: %s \n您可以重新输入 su 路径</string>
 </resources>

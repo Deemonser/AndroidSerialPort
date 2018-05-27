@@ -34,6 +34,10 @@ public class SerialPort {
         sSuPath = suPath;
     }
 
+    public static String getSuPath() {
+        return sSuPath;
+    }
+
     /**
      * Do not remove or rename the field mFd: it is used by native method close();
      */

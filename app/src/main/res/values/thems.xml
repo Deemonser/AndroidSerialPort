@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <!-- Base application theme. -->
+    <style name="DefAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/white</item>
+        <!--<item name="android:windowAnimationStyle">@style/Animation.Activity.Style</item>-->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+
+    <style name="SplashTheme" parent="DefAppTheme">
+        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
+
+    <style name="Transparent" parent="DefAppTheme">
+        <item name="android:windowFrame">@null</item>   <!--Dialog的windowFrame框为无-->
+        <item name="android:windowIsTranslucent">false</item> <!--是否半透明-->
+        <item name="android:windowDisablePreview">true</item> <!--支持预览-->
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>  <!--是否显示title-->
+        <item name="android:windowIsFloating">true</item>   <!--是否浮现在activity之上 -->
+        <item name="android:backgroundDimEnabled">true</item> <!--设置黑暗度-->
+        <item name="android:backgroundDimAmount">0.0</item> <!-- 0.0不暗，1.0全暗-->
+    </style>
+
+
+
+
+
+</resources>

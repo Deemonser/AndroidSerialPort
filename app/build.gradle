@@ -10,6 +10,10 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
     }
     buildTypes {
         release {
@@ -17,16 +21,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+
+    implementation rootProject.ext.deps.appcompatV7
+    implementation rootProject.ext.deps.recyclerviewV7
+    implementation rootProject.ext.deps.constraintLayout
+    implementation rootProject.ext.deps.rvAdapterHelper
+    implementation rootProject.ext.deps.rvDivider
+    implementation rootProject.ext.deps.stickyDecoration
+    implementation rootProject.ext.deps.utils
+    implementation rootProject.ext.deps.jodaTime
+    implementation rootProject.ext.deps.rxJava
+
+    implementation "com.deemons.serialport:serialport:1.1.1"
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-//    implementation project(':serialportlib')
-    implementation "com.deemons.serialport:serialport:1.1.0"
+    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
 }
