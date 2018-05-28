@@ -17,7 +17,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import com.blankj.utilcode.util.KeyboardUtils;
 import com.chad.library.adapter.base.entity.MultiItemEntity;
@@ -53,6 +55,8 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
 
         initRv();
 
+        initListener();
+
         KeyboardUtils.registerSoftInputChangedListener(this, height -> {
             if (isShowBottom && height != 0) {
                 showBottom(false);
@@ -60,6 +64,33 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
                 showBottom(true);
                 willShow = false;
             }
+        });
+    }
+
+    private void initListener() {
+        RadioGroup receiveRg = findViewById(R.id.receive_rg);
+        receiveRg.setOnCheckedChangeListener((group, checkedId) -> {
+            mPresenter.refreshReceiveType(checkedId==R.id.receive_hex);
+        });
+
+        RadioGroup sendRg = findViewById(R.id.send_rg);
+        sendRg.setOnCheckedChangeListener((group, checkedId) -> {
+            mPresenter.refreshSendType(checkedId==R.id.send_hex);
+        });
+
+        CheckBox showSend = findViewById(R.id.receive_show_send);
+        showSend.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mPresenter.refreshShowSend(isChecked);
+        });
+
+        CheckBox showTime = findViewById(R.id.receive_show_time);
+        showTime.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mPresenter.refreshShowTime(isChecked);
+        });
+
+        CheckBox sendRepeat = findViewById(R.id.send_repeat);
+        sendRepeat.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mPresenter.refreshSendRepeat(isChecked);
         });
     }
 
@@ -270,8 +301,28 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
         KeyboardUtils.fixSoftInputLeaks(this);
     }
 
+    public void onClickRepeatDuring(View view) {
+        View inflateView = getLayoutInflater().inflate(R.layout.dialog_during, null);
+        AlertDialog alertDialog = new AlertDialog.Builder(this).setTitle("输入时间")
+            .setView(inflateView)
+            .setNegativeButton("取消", (dialog, which) -> {
+                dialog.dismiss();
+            })
+            .setPositiveButton("确定", (dialog, which) -> {
+                EditText editText = inflateView.findViewById(R.id.during_edit);
+                if (editText != null && !TextUtils.isEmpty(editText.getText().toString())) {
+                    TextView textView = findViewById(R.id.send_repeat_during);
+                    int result = Integer.parseInt(editText.getText().toString().trim());
+                    int hour_12 = 1000 * 60 * 60 * 12;
+                    textView.setText(String.valueOf(
+                        result > hour_12 ? hour_12 : result));
+                    mPresenter.refreshSendDuring(result);
+                    dialog.dismiss();
+                }
+            })
+            .create();
 
-
-
-
+        alertDialog.setCanceledOnTouchOutside(false);
+        alertDialog.show();
+    }
 }

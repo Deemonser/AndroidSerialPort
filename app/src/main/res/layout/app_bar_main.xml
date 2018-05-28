@@ -59,11 +59,11 @@
                 android:id="@+id/main_history"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:onClick="onClickHistory"
                 android:paddingBottom="12dp"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
                 android:paddingTop="12dp"
-                android:onClick="onClickHistory"
                 android:src="@mipmap/ic_history"
                 app:layout_constraintBottom_toTopOf="@id/main_bottom_contain"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -75,11 +75,11 @@
                 android:id="@+id/main_more"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:onClick="onClickMore"
                 android:paddingBottom="12dp"
+                android:paddingLeft="4dp"
                 android:paddingRight="10dp"
                 android:paddingTop="12dp"
-                android:paddingLeft="4dp"
-                android:onClick="onClickMore"
                 android:src="@mipmap/ic_add"
                 app:layout_constraintBottom_toTopOf="@id/main_bottom_contain"
                 app:layout_constraintRight_toRightOf="parent"
@@ -90,11 +90,11 @@
                 android:id="@+id/main_send"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingRight="4dp"
-                android:paddingLeft="10dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="12dp"
                 android:onClick="onClickSend"
+                android:paddingBottom="12dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="4dp"
+                android:paddingTop="12dp"
                 android:src="@mipmap/ic_up"
                 app:layout_constraintBottom_toTopOf="@id/main_bottom_contain"
                 app:layout_constraintRight_toLeftOf="@id/main_more"
@@ -122,12 +122,198 @@
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/main_history"
+                tools:visibility="visible"
                 >
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="@color/greyd"
+                    />
+
+
+                <LinearLayout
+                    android:layout_width="269dp"
+                    android:layout_height="92dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/shape_store"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/bottom_receive_setting_title"
+                    />
+
+                <TextView
+                    android:id="@+id/bottom_receive_setting_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="23dp"
+                    android:background="#F5F5F5"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:text="接收设置"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="16sp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    />
+
+
+                <LinearLayout
+                    android:layout_width="269dp"
+                    android:layout_height="92dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/shape_store"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/bottom_send_setting_title"
+                    />
+
+
+                <TextView
+                    android:id="@+id/bottom_send_setting_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="139dp"
+                    android:background="#F5F5F5"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:text="发送设置"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="16sp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    />
+
+
+                <RadioGroup
+                    android:id="@+id/receive_rg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/bottom_receive_setting_title"
+                    >
+
+                    <RadioButton
+                        android:id="@+id/receive_asc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ASCII"
+                        android:textColor="@drawable/select_color"
+                        />
+
+                    <RadioButton
+                        android:id="@+id/receive_hex"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="80dp"
+                        android:paddingRight="10dp"
+                        android:text="Hex"
+                        android:textColor="@drawable/select_color"
+                        />
+
+                </RadioGroup>
+
+
+                <CheckBox
+                    android:id="@+id/receive_show_send"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="显示发送"
+                    android:textColor="@color/grey6"
+                    android:textSize="15sp"
+                    app:layout_constraintLeft_toLeftOf="@id/receive_rg"
+                    app:layout_constraintTop_toBottomOf="@id/receive_rg"
+                    />
+
+                <CheckBox
+                    android:id="@+id/receive_show_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+
+                    android:layout_marginTop="5dp"
+                    android:text="显示时间"
+                    android:textColor="@color/grey6"
+                    android:textSize="15sp"
+                    app:layout_constraintRight_toRightOf="@id/receive_rg"
+                    android:paddingRight="10dp"
+                    app:layout_constraintTop_toBottomOf="@id/receive_rg"
+                    />
+
+
+                <RadioGroup
+                    android:id="@+id/send_rg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/bottom_send_setting_title"
+                    >
+
+                    <RadioButton
+                        android:id="@+id/send_asc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ASCII"
+                        android:textColor="@drawable/select_color"
+                        />
+
+                    <RadioButton
+                        android:id="@+id/send_hex"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="80dp"
+                        android:paddingRight="10dp"
+                        android:text="Hex"
+                        android:textColor="@drawable/select_color"
+                        />
+
+                </RadioGroup>
+
+                <CheckBox
+                    android:id="@+id/send_repeat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="重复发送"
+                    android:textColor="@color/grey6"
+                    android:textSize="15sp"
+                    app:layout_constraintLeft_toLeftOf="@id/send_rg"
+                    app:layout_constraintTop_toBottomOf="@id/send_rg"
+                    />
+
+                <TextView
+                    android:onClick="onClickRepeatDuring"
+                    android:id="@+id/send_repeat_during"
+                    android:layout_width="78dp"
+                    android:layout_height="20dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="5dp"
+                    android:text="1000"
+                    android:singleLine="true"
+                    android:gravity="center"
+                    android:background="@drawable/shape_edit"
+                    app:layout_constraintBottom_toBottomOf="@id/send_repeat"
+                    app:layout_constraintLeft_toRightOf="@id/send_repeat"
+                    app:layout_constraintTop_toTopOf="@id/send_repeat"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="5dp"
+                    android:text="ms"
+                    android:textColor="@color/grey6"
+                    app:layout_constraintBottom_toBottomOf="@id/send_repeat_during"
+                    app:layout_constraintLeft_toRightOf="@id/send_repeat_during"
+                    app:layout_constraintTop_toTopOf="@id/send_repeat_during"
                     />
 
 

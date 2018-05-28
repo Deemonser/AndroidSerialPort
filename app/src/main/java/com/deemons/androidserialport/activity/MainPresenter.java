@@ -30,6 +30,7 @@ import org.joda.time.DateTime;
  */
 public class MainPresenter implements MainContract.IPresenter {
 
+    private final String mDateFormat = "HH:mm:ss:SSS";
     MainContract.IView mView;
 
     private String mPath;
@@ -243,7 +244,7 @@ public class MainPresenter implements MainContract.IPresenter {
             .map(ByteUtils::bytesToHexString)
             .map(this::addSpace)
             .subscribe(it -> mView.addData(
-                new MessageBean(MessageBean.TYPE_RECEIVE, DateTime.now().toString("HH:mm:ss:SSS"),
+                new MessageBean(MessageBean.TYPE_RECEIVE, DateTime.now().toString(mDateFormat),
                     it)), Throwable::printStackTrace);
     }
 
@@ -267,6 +268,30 @@ public class MainPresenter implements MainContract.IPresenter {
     }
 
     public void sendMsg(String contain) {
+
+    }
+
+    public void refreshSendDuring(int result) {
+
+    }
+
+    public void refreshSendRepeat(boolean isChecked) {
+
+    }
+
+    public void refreshShowTime(boolean isChecked) {
+
+    }
+
+    public void refreshShowSend(boolean isChecked) {
+
+    }
+
+    public void refreshSendType(boolean isHex) {
+
+    }
+
+    public void refreshReceiveType(boolean isHex) {
 
     }
 }
