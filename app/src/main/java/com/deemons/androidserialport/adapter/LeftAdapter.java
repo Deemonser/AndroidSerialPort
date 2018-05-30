@@ -81,7 +81,7 @@ public class LeftAdapter extends BaseMultiItemQuickAdapter<MultiItemEntity, Base
         }
     }
 
-    private void collapseOrExpand(MultiItemEntity item) {
+    public void collapseOrExpand(MultiItemEntity item) {
         int position = getParentPosition(item);
         if (((LeftHeadBean) item).isExpanded()) {
             collapse(position);

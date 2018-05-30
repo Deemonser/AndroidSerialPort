@@ -11,7 +11,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -109,9 +108,13 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
     @SuppressLint("ClickableViewAccessibility")
     private void initRv() {
         mMainRv = findViewById(R.id.main_rv);
-        mMsgAdapter = new MsgAdapter(new ArrayList<>());
-        mMainRv.setLayoutManager(new LinearLayoutManager(this));
 
+        ArrayList<MessageBean> list = new ArrayList<>();
+        list.add(new MessageBean(MessageBean.TYPE_RECEIVE, "08:00:00:123", "receive"));
+        list.add(new MessageBean(MessageBean.TYPE_SEND, "08:00:00:123", "send"));
+        mMsgAdapter = new MsgAdapter(list);
+        mMainRv.setLayoutManager(new LinearLayoutManager(this));
+        mMainRv.setAdapter(mMsgAdapter);
         GestureDetector gestureDetector =
             new GestureDetector(this, new GestureDetector.OnGestureListener() {
                 @Override
@@ -126,7 +129,6 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
 
                 @Override
                 public boolean onSingleTapUp(MotionEvent e) {
-                    Log.d("MainActivity", "click out ...");
                     if (KeyboardUtils.isSoftInputVisible(MainActivity.this)) {
                         KeyboardUtils.hideSoftInput(MainActivity.this);
                     }
@@ -163,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
                 .setHeaderClickListener(new OnHeaderClickListener() {
                     @Override
                     public void onHeaderClick(View view, int id, int position) {
-                        mLeftAdapter.collapse(position);
+                        mLeftAdapter.collapseOrExpand(mLeftAdapter.getItem(position));
                     }
 
                     @Override
@@ -273,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
     }
 
     public void onClickHistory(View view) {
-
+        mMsgAdapter.setNewData(new ArrayList<>());
     }
 
     public void onClickMore(View view) {
@@ -320,6 +322,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
                     dialog.dismiss();
                 }
             })
+            .setOnDismissListener(dialog -> { })
             .create();
 
         alertDialog.setCanceledOnTouchOutside(false);

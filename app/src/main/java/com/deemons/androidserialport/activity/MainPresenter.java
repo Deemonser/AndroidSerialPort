@@ -16,7 +16,12 @@ import com.deemons.serialportlib.SerialPortFinder;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,9 +44,11 @@ public class MainPresenter implements MainContract.IPresenter {
     private int    mDataBits;
     private int    mStopBit;
 
-    private SerialPort mSerialPort;
-    private boolean    isInterrupted;
-    private Disposable mDisposable;
+    private SerialPort                mSerialPort;
+    private boolean                   isInterrupted;
+    private Disposable                mRecieveDisposable;
+    private ObservableEmitter<String> mEmitter;
+    private Disposable                mSendDisposable;
 
     public MainPresenter(MainContract.IView view) {
         mView = view;
@@ -78,6 +85,7 @@ public class MainPresenter implements MainContract.IPresenter {
         for (String s : path) {
             if (TextUtils.isEmpty(mPath)) {
                 mPath = s;
+                SPUtils.getInstance().put(SPKey.SERIAL_PORT, mPath);
             }
 
             if (s.equals(mPath)) {
@@ -90,7 +98,7 @@ public class MainPresenter implements MainContract.IPresenter {
         LeftHeadBean bean = new LeftHeadBean();
         bean.imageRes = R.mipmap.ic_serial_port;
         bean.title = "串口";
-        bean.spKey =SPKey.SERIAL_PORT;
+        bean.spKey = SPKey.SERIAL_PORT;
         bean.value = mPath;
 
         for (LeftDetailBean detailBean : list) {
@@ -115,7 +123,7 @@ public class MainPresenter implements MainContract.IPresenter {
         LeftHeadBean bean = new LeftHeadBean();
         bean.imageRes = R.mipmap.ic_baud;
         bean.title = "波特率";
-        bean.spKey =SPKey.BAUD_RATE;
+        bean.spKey = SPKey.BAUD_RATE;
         bean.value = String.valueOf(mBaudRate);
 
         for (LeftDetailBean leftDetailBean : list) {
@@ -140,7 +148,7 @@ public class MainPresenter implements MainContract.IPresenter {
         LeftHeadBean bean = new LeftHeadBean();
         bean.imageRes = R.mipmap.ic_check;
         bean.title = "校验位";
-        bean.spKey =SPKey.CHECK_DIGIT;
+        bean.spKey = SPKey.CHECK_DIGIT;
         bean.value = String.valueOf(mCheckDigit);
 
         for (LeftDetailBean leftDetailBean : list) {
@@ -165,7 +173,7 @@ public class MainPresenter implements MainContract.IPresenter {
         LeftHeadBean bean = new LeftHeadBean();
         bean.imageRes = R.mipmap.ic_data;
         bean.title = "数据位";
-        bean.spKey =SPKey.DATA_BITS;
+        bean.spKey = SPKey.DATA_BITS;
         bean.value = String.valueOf(mDataBits);
 
         for (LeftDetailBean leftDetailBean : list) {
@@ -190,7 +198,7 @@ public class MainPresenter implements MainContract.IPresenter {
         LeftHeadBean bean = new LeftHeadBean();
         bean.imageRes = R.mipmap.ic_stop;
         bean.title = "停止位";
-        bean.spKey =SPKey.STOP_BIT;
+        bean.spKey = SPKey.STOP_BIT;
         bean.value = String.valueOf(mStopBit);
 
         for (LeftDetailBean leftDetailBean : list) {
@@ -216,20 +224,43 @@ public class MainPresenter implements MainContract.IPresenter {
         if (mSerialPort != null) {
             isInterrupted = false;
             onReceiveSubscribe();
+            onSendSubscribe();
+            ToastUtils.showLong("打开串口成功！");
         }
 
         mView.setOpen(mSerialPort != null);
     }
 
+    private void onSendSubscribe() {
+        mSendDisposable = Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                mEmitter = emitter;
+            }
+        })
+
+            .doOnNext(s -> mSerialPort.getOutputStream().write(ByteUtils.hexStringToBytes(s)))
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(s -> {
+                mView.addData(
+                    new MessageBean(MessageBean.TYPE_SEND, DateTime.now().toString(mDateFormat),
+                        s));
+            }, Throwable::printStackTrace);
+    }
+
     public void close() {
         isInterrupted = true;
-        if (mDisposable != null) {
-            mDisposable.dispose();
+        if (mRecieveDisposable != null) {
+            mRecieveDisposable.dispose();
+        }
+        if (mSendDisposable != null) {
+            mEmitter = null;
+            mSendDisposable.dispose();
         }
     }
 
     private void onReceiveSubscribe() {
-        mDisposable = Flowable.create((FlowableOnSubscribe<byte[]>) emitter -> {
+        mRecieveDisposable = Flowable.create((FlowableOnSubscribe<byte[]>) emitter -> {
             InputStream is = mSerialPort.getInputStream();
             byte[] buffer = new byte[64];
             while (!isInterrupted) {
@@ -243,6 +274,8 @@ public class MainPresenter implements MainContract.IPresenter {
         }, BackpressureStrategy.LATEST)
             .map(ByteUtils::bytesToHexString)
             .map(this::addSpace)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribe(it -> mView.addData(
                 new MessageBean(MessageBean.TYPE_RECEIVE, DateTime.now().toString(mDateFormat),
                     it)), Throwable::printStackTrace);
@@ -254,7 +287,7 @@ public class MainPresenter implements MainContract.IPresenter {
             char[] array = s.toCharArray();
             int length = array.length;
             for (int i = 0; i < length; i += 2) {
-                if (i <= length - 2) {
+                if (i != 0 && i <= length - 2) {
                     builder.append(" ");
                 }
 
@@ -268,7 +301,11 @@ public class MainPresenter implements MainContract.IPresenter {
     }
 
     public void sendMsg(String contain) {
-
+        if (mEmitter != null) {
+            mEmitter.onNext(contain.replace(" ", ""));
+        } else {
+            ToastUtils.showLong("请先打开串口！");
+        }
     }
 
     public void refreshSendDuring(int result) {

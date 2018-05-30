@@ -62,7 +62,7 @@ ext {
             utils                   : 'com.blankj:utilcode:1.13.14',
             statusBarCompat         : 'com.github.niorgai:StatusBarCompat:2.1.3',
             barlibrary              : 'com.gyf.barlibrary:barlibrary:2.3.0',
-            rvAdapterHelper         : 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.34',
+            rvAdapterHelper         : 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.40',
             stickyDecoration        : 'com.oushangfeng:PinnedSectionItemDecoration:1.2.4',
             rvDivider               : 'com.yqritc:recyclerview-flexibledivider:1.4.0',
             fragmentation           : 'me.yokeyword:fragmentation:1.1.9',

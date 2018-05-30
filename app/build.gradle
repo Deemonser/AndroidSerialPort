@@ -35,6 +35,7 @@ dependencies {
     implementation rootProject.ext.deps.utils
     implementation rootProject.ext.deps.jodaTime
     implementation rootProject.ext.deps.rxJava
+    implementation rootProject.ext.deps.rxAndroid
 
     implementation "com.deemons.serialport:serialport:1.1.1"
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
