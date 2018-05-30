@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:background="@drawable/bg_my_receive_"
+            android:background="@drawable/ic_msg_left"
             android:orientation="vertical"
             >
 
@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#333333"
-                android:textSize="9sp"
+                android:textSize="14sp"
                 tools:ignore="SmallSp"
                 tools:text="[12:10:22]"
                 />
@@ -42,9 +42,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#333333"
-                android:textSize="9sp"
+                android:textSize="12sp"
                 tools:ignore="SmallSp"
-                tools:text="AA BB CC 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22"
+                tools:text="AA BB CC 22 22 22 22 22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22"
                 />
         </LinearLayout>
     </android.support.constraint.ConstraintLayout>

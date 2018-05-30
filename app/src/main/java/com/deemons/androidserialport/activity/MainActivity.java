@@ -18,9 +18,11 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import com.blankj.utilcode.util.KeyboardUtils;
+import com.blankj.utilcode.util.SPUtils;
 import com.chad.library.adapter.base.entity.MultiItemEntity;
 import com.deemons.androidserialport.R;
 import com.deemons.androidserialport.adapter.LeftAdapter;
@@ -103,6 +105,14 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
                 R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        ((RadioButton)findViewById(SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_TYPE,true)?R.id.receive_hex:R.id.receive_asc)).setChecked(true);
+        ((CheckBox)findViewById(R.id.receive_show_send)).setChecked(SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_SEND,true));
+        ((CheckBox)findViewById(R.id.receive_show_time)).setChecked(SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_TIME,true));
+
+        ((RadioButton)findViewById(SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_TYPE,true)?R.id.send_hex:R.id.send_asc)).setChecked(true);
+        ((CheckBox)findViewById(R.id.send_repeat)).setChecked(SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_REPEAT));
+        ((TextView)findViewById(R.id.send_repeat_during)).setText(String.valueOf(SPUtils.getInstance().getInt(SPKey.SETTING_SEND_DURING,1000)));
     }
 
     @SuppressLint("ClickableViewAccessibility")

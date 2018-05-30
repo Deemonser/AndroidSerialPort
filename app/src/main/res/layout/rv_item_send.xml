@@ -8,49 +8,50 @@
 
     >
 
-    <android.support.constraint.Guideline
-        android:id="@+id/guideline_w"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.2" />
-
-
-
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_my_send"
+        android:layout_marginTop="10dp"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="@id/guideline_w"
+        app:layout_constraintWidth_percent="0.8"
+
         >
 
-
-        <TextView
-            android:id="@+id/item_send_date"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:textSize="9sp"
+            android:background="@drawable/ic_msg_right"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="SmallSp"
-            tools:text="[12:10:22]"
-            />
+            android:gravity="right"
+            android:orientation="vertical"
+            >
 
-        <TextView
-            android:id="@+id/item_send_contain"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:textSize="9sp"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/item_send_date"
-            tools:ignore="SmallSp"
-            tools:text="AA BB CC DD EE 11 22 33 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22"
-            />
+            <TextView
+                android:id="@+id/item_send_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                tools:ignore="SmallSp"
+                tools:text="[12:10:22]"
+                />
+
+            <TextView
+                android:id="@+id/item_send_contain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/item_send_date"
+                tools:ignore="SmallSp"
+                tools:text="AA BB CC DD EE 11 22 33 22 222 22"
+                />
+
+        </LinearLayout>
+
 
     </android.support.constraint.ConstraintLayout>
 

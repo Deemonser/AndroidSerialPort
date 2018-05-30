@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import org.joda.time.DateTime;
 
 /**
@@ -44,14 +45,29 @@ public class MainPresenter implements MainContract.IPresenter {
     private int    mDataBits;
     private int    mStopBit;
 
+    private boolean isHexReceive;
+    private boolean isHexSend;
+    private boolean isShowSend;
+    private boolean isShowTime;
+    private boolean isSendRepeat;
+    private int     mRepeateDuring;
+
     private SerialPort                mSerialPort;
     private boolean                   isInterrupted;
-    private Disposable                mRecieveDisposable;
+    private Disposable                mReceiveDisposable;
     private ObservableEmitter<String> mEmitter;
     private Disposable                mSendDisposable;
+    private Disposable                mSendRepeatDisposable;
 
     public MainPresenter(MainContract.IView view) {
         mView = view;
+
+        isHexReceive = SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_TYPE, true);
+        isHexSend = SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_TYPE, true);
+        isShowSend = SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_SEND, true);
+        isShowTime = SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_TIME, true);
+        isSendRepeat = SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_REPEAT, false);
+        mRepeateDuring = SPUtils.getInstance().getInt(SPKey.SETTING_RECEIVE_TYPE, 1000);
     }
 
     private void refreshValueFormSp() {
@@ -241,17 +257,17 @@ public class MainPresenter implements MainContract.IPresenter {
 
             .doOnNext(s -> mSerialPort.getOutputStream().write(ByteUtils.hexStringToBytes(s)))
             .observeOn(AndroidSchedulers.mainThread())
+            .filter(s -> isShowSend)
             .subscribe(s -> {
-                mView.addData(
-                    new MessageBean(MessageBean.TYPE_SEND, DateTime.now().toString(mDateFormat),
-                        s));
+                mView.addData(new MessageBean(MessageBean.TYPE_SEND,
+                    isShowTime ? DateTime.now().toString(mDateFormat) : "", s));
             }, Throwable::printStackTrace);
     }
 
     public void close() {
         isInterrupted = true;
-        if (mRecieveDisposable != null) {
-            mRecieveDisposable.dispose();
+        if (mReceiveDisposable != null) {
+            mReceiveDisposable.dispose();
         }
         if (mSendDisposable != null) {
             mEmitter = null;
@@ -260,7 +276,7 @@ public class MainPresenter implements MainContract.IPresenter {
     }
 
     private void onReceiveSubscribe() {
-        mRecieveDisposable = Flowable.create((FlowableOnSubscribe<byte[]>) emitter -> {
+        mReceiveDisposable = Flowable.create((FlowableOnSubscribe<byte[]>) emitter -> {
             InputStream is = mSerialPort.getInputStream();
             byte[] buffer = new byte[64];
             while (!isInterrupted) {
@@ -276,9 +292,9 @@ public class MainPresenter implements MainContract.IPresenter {
             .map(this::addSpace)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(it -> mView.addData(
-                new MessageBean(MessageBean.TYPE_RECEIVE, DateTime.now().toString(mDateFormat),
-                    it)), Throwable::printStackTrace);
+            .subscribe(it -> mView.addData(new MessageBean(MessageBean.TYPE_RECEIVE,
+                    isShowTime ? DateTime.now().toString(mDateFormat) : "", it)),
+                Throwable::printStackTrace);
     }
 
     private String addSpace(String s) {
@@ -309,26 +325,50 @@ public class MainPresenter implements MainContract.IPresenter {
     }
 
     public void refreshSendDuring(int result) {
+        SPUtils.getInstance().put(SPKey.SETTING_SEND_DURING, result);
+        mRepeateDuring = result;
 
+        //正在运行
+        if (mSendRepeatDisposable != null && !mSendRepeatDisposable.isDisposed()) {
+            registerSendRepeat(true);
+        }
     }
 
     public void refreshSendRepeat(boolean isChecked) {
+        SPUtils.getInstance().put(SPKey.SETTING_SEND_REPEAT, isChecked);
 
+        registerSendRepeat(isChecked);
     }
 
     public void refreshShowTime(boolean isChecked) {
-
+        SPUtils.getInstance().put(SPKey.SETTING_RECEIVE_SHOW_TIME, isChecked);
+        isShowTime = isChecked;
     }
 
     public void refreshShowSend(boolean isChecked) {
-
+        SPUtils.getInstance().put(SPKey.SETTING_RECEIVE_SHOW_SEND, isChecked);
+        isShowSend = isChecked;
     }
 
     public void refreshSendType(boolean isHex) {
-
+        SPUtils.getInstance().put(SPKey.SETTING_SEND_TYPE, isHex);
     }
 
     public void refreshReceiveType(boolean isHex) {
-
+        SPUtils.getInstance().put(SPKey.SETTING_RECEIVE_TYPE, isHex);
     }
+
+
+
+    private void registerSendRepeat(boolean checked) {
+        if (mSendRepeatDisposable != null && !mSendRepeatDisposable.isDisposed()) {
+            mSendRepeatDisposable.dispose();
+        }
+
+        if (checked) {
+            mSendRepeatDisposable = Observable.timer(mRepeateDuring, TimeUnit.MILLISECONDS)
+                .subscribe(aLong -> sendMsg(""), Throwable::printStackTrace);
+        }
+    }
+
 }
