@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -25,6 +26,7 @@ import com.blankj.utilcode.util.KeyboardUtils;
 import com.blankj.utilcode.util.SPUtils;
 import com.chad.library.adapter.base.entity.MultiItemEntity;
 import com.deemons.androidserialport.R;
+import com.deemons.androidserialport.adapter.HistoryAdapter;
 import com.deemons.androidserialport.adapter.LeftAdapter;
 import com.deemons.androidserialport.adapter.MsgAdapter;
 import com.deemons.androidserialport.bean.MessageBean;
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
 
     private MainPresenter mPresenter;
     private RecyclerView  mMainRv;
+    private EditText      mEditText;
     private MsgAdapter    mMsgAdapter;
     private LeftAdapter   mLeftAdapter;
     private MenuItem      mMenuItem;
@@ -71,12 +74,12 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
     private void initListener() {
         RadioGroup receiveRg = findViewById(R.id.receive_rg);
         receiveRg.setOnCheckedChangeListener((group, checkedId) -> {
-            mPresenter.refreshReceiveType(checkedId==R.id.receive_hex);
+            mPresenter.refreshReceiveType(checkedId == R.id.receive_hex);
         });
 
         RadioGroup sendRg = findViewById(R.id.send_rg);
         sendRg.setOnCheckedChangeListener((group, checkedId) -> {
-            mPresenter.refreshSendType(checkedId==R.id.send_hex);
+            mPresenter.refreshSendType(checkedId == R.id.send_hex);
         });
 
         CheckBox showSend = findViewById(R.id.receive_show_send);
@@ -106,23 +109,27 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        ((RadioButton)findViewById(SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_TYPE,true)?R.id.receive_hex:R.id.receive_asc)).setChecked(true);
-        ((CheckBox)findViewById(R.id.receive_show_send)).setChecked(SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_SEND,true));
-        ((CheckBox)findViewById(R.id.receive_show_time)).setChecked(SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_TIME,true));
+        ((RadioButton) findViewById(
+            SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_TYPE, true) ? R.id.receive_hex
+                : R.id.receive_asc)).setChecked(true);
+        ((CheckBox) findViewById(R.id.receive_show_send)).setChecked(
+            SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_SEND, true));
+        ((CheckBox) findViewById(R.id.receive_show_time)).setChecked(
+            SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_TIME, true));
 
-        ((RadioButton)findViewById(SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_TYPE,true)?R.id.send_hex:R.id.send_asc)).setChecked(true);
-        ((CheckBox)findViewById(R.id.send_repeat)).setChecked(SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_REPEAT));
-        ((TextView)findViewById(R.id.send_repeat_during)).setText(String.valueOf(SPUtils.getInstance().getInt(SPKey.SETTING_SEND_DURING,1000)));
+        ((RadioButton) findViewById(
+            SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_TYPE, true) ? R.id.send_hex
+                : R.id.send_asc)).setChecked(true);
+        ((CheckBox) findViewById(R.id.send_repeat)).setChecked(false);
+        ((TextView) findViewById(R.id.send_repeat_during)).setText(
+            String.valueOf(SPUtils.getInstance().getInt(SPKey.SETTING_SEND_DURING, 1000)));
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private void initRv() {
         mMainRv = findViewById(R.id.main_rv);
 
-        ArrayList<MessageBean> list = new ArrayList<>();
-        list.add(new MessageBean(MessageBean.TYPE_RECEIVE, "08:00:00:123", "receive"));
-        list.add(new MessageBean(MessageBean.TYPE_SEND, "08:00:00:123", "send"));
-        mMsgAdapter = new MsgAdapter(list);
+        mMsgAdapter = new MsgAdapter(new ArrayList<>());
         mMainRv.setLayoutManager(new LinearLayoutManager(this));
         mMainRv.setAdapter(mMsgAdapter);
         GestureDetector gestureDetector =
@@ -192,6 +199,15 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
         leftRv.setLayoutManager(new LinearLayoutManager(this));
         leftRv.setAdapter(mLeftAdapter);
         mPresenter.getLeftData();
+
+        mEditText = findViewById(R.id.main_edit);
+
+        mEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                KeyboardUtils.hideSoftInput(this);
+            }
+            return false;
+        });
     }
 
     @Override
@@ -222,10 +238,12 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
 
     @Override
     public void setOpen(boolean isOpen) {
-        if (mMenuItem != null) {
-            mMenuItem.setIcon(isOpen ? R.mipmap.ic_launcher : R.mipmap.ic_close);
-        }
-        this.isOpen = isOpen;
+        runOnUiThread(() -> {
+            if (mMenuItem != null) {
+                mMenuItem.setIcon(isOpen ? R.mipmap.ic_launcher : R.mipmap.ic_close);
+            }
+            this.isOpen = isOpen;
+        });
     }
 
     @Override
@@ -236,6 +254,8 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
     @Override
     public void addData(MessageBean messageBean) {
         mMsgAdapter.addData(messageBean);
+        int position = mMsgAdapter.getItemCount() - 1;
+        mMainRv.scrollToPosition(position > 0 ? position : 0);
     }
 
     @SuppressLint("StringFormatInvalid")
@@ -244,6 +264,13 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
         View view = getLayoutInflater().inflate(R.layout.dialog_permission, null);
         TextView textView = view.findViewById(R.id.dialog_text);
         String string = getResources().getString(R.string.permission_error);
+        EditText editText = view.findViewById(R.id.dialog_path);
+        editText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                KeyboardUtils.hideSoftInput(this);
+            }
+            return false;
+        });
 
         textView.setText(String.format(Locale.getDefault(), string, SerialPort.getSuPath()));
         AlertDialog alertDialog = new AlertDialog.Builder(this).setTitle("提示")
@@ -252,7 +279,6 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
                 dialog.dismiss();
             })
             .setPositiveButton("确定", (dialog, which) -> {
-                EditText editText = view.findViewById(R.id.dialog_path);
                 if (editText != null && !TextUtils.isEmpty(editText.getText().toString())) {
                     SerialPort.setSuPath(editText.getText().toString());
                     dialog.dismiss();
@@ -262,6 +288,11 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
 
         alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.show();
+    }
+
+    @Override
+    public String getEditText() {
+        return mEditText.getText().toString();
     }
 
     @Override
@@ -285,7 +316,23 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
     }
 
     public void onClickHistory(View view) {
-        mMsgAdapter.setNewData(new ArrayList<>());
+        View inflateView = getLayoutInflater().inflate(R.layout.dialog_history, null);
+
+        RecyclerView recyclerView = inflateView.findViewById(R.id.dialog_history_rv);
+        HistoryAdapter historyAdapter = new HistoryAdapter(mPresenter.getHistory());
+        recyclerView.setAdapter(historyAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        AlertDialog alertDialog =
+            new AlertDialog.Builder(this).setTitle("历史记录").setView(inflateView).create();
+
+        historyAdapter.setOnItemClickListener((adapter1, view1, position) -> {
+            mEditText.setText(historyAdapter.getData().get(position));
+            mEditText.setSelection(mEditText.getText().length());
+            alertDialog.dismiss();
+        });
+
+        alertDialog.show();
     }
 
     public void onClickMore(View view) {
@@ -303,13 +350,14 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
         if (!TextUtils.isEmpty(contain)) {
             mPresenter.sendMsg(contain);
         }
-        editText.getText().clear();
+        //editText.getText().clear();
         KeyboardUtils.hideSoftInput(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mPresenter.onDestroy();
         KeyboardUtils.fixSoftInputLeaks(this);
     }
 
@@ -326,13 +374,11 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
                     TextView textView = findViewById(R.id.send_repeat_during);
                     int result = Integer.parseInt(editText.getText().toString().trim());
                     int hour_12 = 1000 * 60 * 60 * 12;
-                    textView.setText(String.valueOf(
-                        result > hour_12 ? hour_12 : result));
+                    textView.setText(String.valueOf(result > hour_12 ? hour_12 : result));
                     mPresenter.refreshSendDuring(result);
                     dialog.dismiss();
                 }
             })
-            .setOnDismissListener(dialog -> { })
             .create();
 
         alertDialog.setCanceledOnTouchOutside(false);

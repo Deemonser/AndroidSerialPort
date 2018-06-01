@@ -1,7 +1,9 @@
 package com.deemons.androidserialport.activity;
 
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 import com.blankj.utilcode.util.SPUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
@@ -26,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.concurrent.TimeUnit;
 import org.joda.time.DateTime;
 
@@ -39,6 +42,8 @@ public class MainPresenter implements MainContract.IPresenter {
     private final String mDateFormat = "HH:mm:ss:SSS";
     MainContract.IView mView;
 
+    private LinkedHashSet<String> mSendHistory;
+
     private String mPath;
     private int    mBaudRate;
     private int    mCheckDigit;
@@ -50,7 +55,8 @@ public class MainPresenter implements MainContract.IPresenter {
     private boolean isShowSend;
     private boolean isShowTime;
     private boolean isSendRepeat;
-    private int     mRepeateDuring;
+    private int     mRepeatDuring;
+
 
     private SerialPort                mSerialPort;
     private boolean                   isInterrupted;
@@ -66,8 +72,11 @@ public class MainPresenter implements MainContract.IPresenter {
         isHexSend = SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_TYPE, true);
         isShowSend = SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_SEND, true);
         isShowTime = SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_TIME, true);
-        isSendRepeat = SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_REPEAT, false);
-        mRepeateDuring = SPUtils.getInstance().getInt(SPKey.SETTING_RECEIVE_TYPE, 1000);
+        //isSendRepeat = SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_REPEAT, false);
+        mRepeatDuring = SPUtils.getInstance().getInt(SPKey.SETTING_RECEIVE_TYPE, 1000);
+
+        mSendHistory = (LinkedHashSet<String>) SPUtils.getInstance()
+            .getStringSet(SPKey.SEND_HISTORY, new LinkedHashSet<String>(30));
     }
 
     private void refreshValueFormSp() {
@@ -248,45 +257,52 @@ public class MainPresenter implements MainContract.IPresenter {
     }
 
     private void onSendSubscribe() {
-        mSendDisposable = Observable.create(new ObservableOnSubscribe<String>() {
-            @Override
-            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
-                mEmitter = emitter;
-            }
-        })
-
-            .doOnNext(s -> mSerialPort.getOutputStream().write(ByteUtils.hexStringToBytes(s)))
-            .observeOn(AndroidSchedulers.mainThread())
-            .filter(s -> isShowSend)
-            .subscribe(s -> {
-                mView.addData(new MessageBean(MessageBean.TYPE_SEND,
-                    isShowTime ? DateTime.now().toString(mDateFormat) : "", s));
-            }, Throwable::printStackTrace);
+        mSendDisposable =
+            Observable.create((ObservableOnSubscribe<String>) emitter -> mEmitter = emitter)
+                .filter(s -> !TextUtils.isEmpty(s))
+                .doOnNext(s -> mSendHistory.add(s))
+                .doOnNext(s -> mSerialPort.getOutputStream().write(ByteUtils.hexStringToBytes(s)))
+                .observeOn(AndroidSchedulers.mainThread())
+                .filter(s -> isShowSend)
+                .subscribe(s -> {
+                    mView.addData(new MessageBean(MessageBean.TYPE_SEND,
+                        isShowTime ? DateTime.now().toString(mDateFormat) : "", s));
+                }, Throwable::printStackTrace);
     }
 
     public void close() {
         isInterrupted = true;
-        if (mReceiveDisposable != null) {
-            mReceiveDisposable.dispose();
-        }
-        if (mSendDisposable != null) {
-            mEmitter = null;
-            mSendDisposable.dispose();
-        }
+        disposable(mReceiveDisposable);
+
+        disposable(mSendDisposable);
+        mEmitter = null;
+
+        disposable(mSendRepeatDisposable);
+
+        mSerialPort = null;
+
+        mView.setOpen(false);
     }
 
     private void onReceiveSubscribe() {
+        ArrayList<Byte> result = new ArrayList<>();
         mReceiveDisposable = Flowable.create((FlowableOnSubscribe<byte[]>) emitter -> {
             InputStream is = mSerialPort.getInputStream();
-            byte[] buffer = new byte[64];
-            while (!isInterrupted) {
-                if (mSerialPort == null || is == null) {
-                    close();
-                    return;
-                }
-                is.read(buffer);
-                emitter.onNext(buffer);
+            int available;
+
+            while (!isInterrupted && mSerialPort != null && is != null && (is.read()) != -1) {
+                do {
+                    available = is.available();
+                    SystemClock.sleep(1);
+                    Log.d("onReceiveSubscribe", "available =" + available);
+                } while (available != is.available());
+
+                byte[] bytes = new byte[is.available()];
+                is.read(bytes);
+                Log.d("onReceiveSubscribe", ByteUtils.bytesToHexString(bytes));
+                emitter.onNext(bytes);
             }
+            close();
         }, BackpressureStrategy.LATEST)
             .map(ByteUtils::bytesToHexString)
             .map(this::addSpace)
@@ -307,8 +323,8 @@ public class MainPresenter implements MainContract.IPresenter {
                     builder.append(" ");
                 }
 
-                builder.append(array[0]);
-                builder.append(array[1]);
+                builder.append(array[i]);
+                builder.append(array[i+1]);
             }
 
             return builder.toString();
@@ -326,7 +342,7 @@ public class MainPresenter implements MainContract.IPresenter {
 
     public void refreshSendDuring(int result) {
         SPUtils.getInstance().put(SPKey.SETTING_SEND_DURING, result);
-        mRepeateDuring = result;
+        mRepeatDuring = result;
 
         //正在运行
         if (mSendRepeatDisposable != null && !mSendRepeatDisposable.isDisposed()) {
@@ -358,17 +374,27 @@ public class MainPresenter implements MainContract.IPresenter {
         SPUtils.getInstance().put(SPKey.SETTING_RECEIVE_TYPE, isHex);
     }
 
-
-
     private void registerSendRepeat(boolean checked) {
-        if (mSendRepeatDisposable != null && !mSendRepeatDisposable.isDisposed()) {
-            mSendRepeatDisposable.dispose();
-        }
+        disposable(mSendRepeatDisposable);
 
         if (checked) {
-            mSendRepeatDisposable = Observable.timer(mRepeateDuring, TimeUnit.MILLISECONDS)
-                .subscribe(aLong -> sendMsg(""), Throwable::printStackTrace);
+            mSendRepeatDisposable = Observable.interval(mRepeatDuring, TimeUnit.MILLISECONDS)
+                .subscribe(aLong -> sendMsg(mView.getEditText()), Throwable::printStackTrace);
         }
     }
 
+    public void onDestroy() {
+        close();
+        SPUtils.getInstance().put(SPKey.SEND_HISTORY, mSendHistory);
+    }
+
+    private void disposable(Disposable disposable) {
+        if (disposable != null && !disposable.isDisposed()) {
+            disposable.dispose();
+        }
+    }
+
+    public ArrayList<String> getHistory() {
+        return new ArrayList<>(mSendHistory);
+    }
 }

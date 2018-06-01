@@ -2,6 +2,7 @@ package com.deemons.androidserialport;
 
 import android.app.Application;
 import com.blankj.utilcode.util.Utils;
+import net.danlew.android.joda.JodaTimeAndroid;
 
 /**
  * author： deemons
@@ -14,5 +15,7 @@ public class App extends Application {
         super.onCreate();
 
         Utils.init(this);
+
+        JodaTimeAndroid.init(this);
     }
 }

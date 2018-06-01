@@ -19,6 +19,8 @@ public interface MainContract {
         void addData(MessageBean messageBean);
 
         void showPermissionDialog();
+
+        String getEditText();
     }
 
     interface IPresenter {

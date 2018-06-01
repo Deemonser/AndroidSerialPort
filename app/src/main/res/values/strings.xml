@@ -7,6 +7,6 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-    <string name="permission_error">获取 root 权限失败！\n 一般 su 路径为：\n /system/bin/su 或 /system/xbin/su 。\n当前 su 路径: %s \n您可以重新输入 su 路径</string>
+    <string name="permission_error">获取 root 权限失败！\n您可以更换串口，或者尝试修改 su 路径。\n一般 su 路径为：\n /system/bin/su 或 /system/xbin/su 。\n当前 su 路径: %s \n您可以重新输入 su 路径</string>
     <string name="time_format">[ %s ]</string>
 </resources>
