@@ -109,8 +109,10 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/shape_edit"
                 android:minHeight="34dp"
+                android:singleLine="true"
                 app:layout_constraintLeft_toRightOf="@id/main_history"
                 app:layout_constraintRight_toLeftOf="@id/main_send"
+                android:imeOptions="actionGo"
                 app:layout_constraintTop_toTopOf="parent"
                 />
 

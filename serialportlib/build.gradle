@@ -62,7 +62,7 @@ publish {
     userOrg = 'deemons' //注册的用户名
     groupId = 'com.deemons.serialport' //引用时第一部分
     artifactId = 'serialport' //引用时的第二部分
-    publishVersion = '1.1.1' //引用时的第三部分，版本号
+    publishVersion = '1.2.0' //引用时的第三部分，版本号
     desc = 'android serialport'//描述
     website = 'https://github.com/Deemonser/AndroidSerialPort'//项目地址
 }

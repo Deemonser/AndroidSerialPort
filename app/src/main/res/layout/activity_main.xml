@@ -28,12 +28,23 @@
         <ImageView
             android:id="@+id/left_top_image"
             android:layout_width="0dp"
-            android:layout_height="160dp"
+            android:onClick="jumpToGithub"
+            android:layout_height="150dp"
             android:scaleType="center"
             android:src="@drawable/icon"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/left_rv"
+            />
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:background="@color/greyd"
+            android:layout_height="1dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toTopOf="@id/left_rv"
             />
 

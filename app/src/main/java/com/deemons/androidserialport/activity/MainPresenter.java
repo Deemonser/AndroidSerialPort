@@ -3,7 +3,6 @@ package com.deemons.androidserialport.activity;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
-import android.util.Log;
 import com.blankj.utilcode.util.SPUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
@@ -54,9 +53,7 @@ public class MainPresenter implements MainContract.IPresenter {
     private boolean isHexSend;
     private boolean isShowSend;
     private boolean isShowTime;
-    private boolean isSendRepeat;
     private int     mRepeatDuring;
-
 
     private SerialPort                mSerialPort;
     private boolean                   isInterrupted;
@@ -72,11 +69,15 @@ public class MainPresenter implements MainContract.IPresenter {
         isHexSend = SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_TYPE, true);
         isShowSend = SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_SEND, true);
         isShowTime = SPUtils.getInstance().getBoolean(SPKey.SETTING_RECEIVE_SHOW_TIME, true);
-        //isSendRepeat = SPUtils.getInstance().getBoolean(SPKey.SETTING_SEND_REPEAT, false);
         mRepeatDuring = SPUtils.getInstance().getInt(SPKey.SETTING_RECEIVE_TYPE, 1000);
 
-        mSendHistory = (LinkedHashSet<String>) SPUtils.getInstance()
-            .getStringSet(SPKey.SEND_HISTORY, new LinkedHashSet<String>(30));
+        try {
+            mSendHistory = (LinkedHashSet<String>) SPUtils.getInstance()
+                .getStringSet(SPKey.SEND_HISTORY, new LinkedHashSet<String>(30));
+        } catch (ClassCastException e) {
+            e.printStackTrace();
+            mSendHistory = new LinkedHashSet<String>(30);
+        }
     }
 
     private void refreshValueFormSp() {
@@ -261,7 +262,9 @@ public class MainPresenter implements MainContract.IPresenter {
             Observable.create((ObservableOnSubscribe<String>) emitter -> mEmitter = emitter)
                 .filter(s -> !TextUtils.isEmpty(s))
                 .doOnNext(s -> mSendHistory.add(s))
-                .doOnNext(s -> mSerialPort.getOutputStream().write(ByteUtils.hexStringToBytes(s)))
+                .doOnNext(s -> mSerialPort.getOutputStream()
+                    .write(isHexSend ? ByteUtils.hexStringToBytes(s)
+                        : ByteUtils.stringToAsciiBytes(s)))
                 .observeOn(AndroidSchedulers.mainThread())
                 .filter(s -> isShowSend)
                 .subscribe(s -> {
@@ -285,28 +288,31 @@ public class MainPresenter implements MainContract.IPresenter {
     }
 
     private void onReceiveSubscribe() {
-        ArrayList<Byte> result = new ArrayList<>();
         mReceiveDisposable = Flowable.create((FlowableOnSubscribe<byte[]>) emitter -> {
             InputStream is = mSerialPort.getInputStream();
             int available;
-
-            while (!isInterrupted && mSerialPort != null && is != null && (is.read()) != -1) {
+            int first;
+            while (!isInterrupted
+                && mSerialPort != null
+                && is != null
+                && (first = is.read()) != -1) {
                 do {
                     available = is.available();
                     SystemClock.sleep(1);
-                    Log.d("onReceiveSubscribe", "available =" + available);
                 } while (available != is.available());
 
-                byte[] bytes = new byte[is.available()];
-                is.read(bytes);
-                Log.d("onReceiveSubscribe", ByteUtils.bytesToHexString(bytes));
+                available = is.available();
+                byte[] bytes = new byte[available + 1];
+                is.read(bytes, 1, available);
+                bytes[0] = (byte) (first & 0xFF);
                 emitter.onNext(bytes);
             }
             close();
-        }, BackpressureStrategy.LATEST)
-            .map(ByteUtils::bytesToHexString)
-            .map(this::addSpace)
-            .subscribeOn(Schedulers.io())
+        }, BackpressureStrategy.MISSING)
+            .retry()
+            .map(bytes -> isHexReceive ? addSpace(ByteUtils.bytesToHexString(bytes))
+                : ByteUtils.bytesToAscii(bytes))
+            .subscribeOn(Schedulers.single())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(it -> mView.addData(new MessageBean(MessageBean.TYPE_RECEIVE,
                     isShowTime ? DateTime.now().toString(mDateFormat) : "", it)),
@@ -324,7 +330,7 @@ public class MainPresenter implements MainContract.IPresenter {
                 }
 
                 builder.append(array[i]);
-                builder.append(array[i+1]);
+                builder.append(array[i + 1]);
             }
 
             return builder.toString();
@@ -368,13 +374,20 @@ public class MainPresenter implements MainContract.IPresenter {
 
     public void refreshSendType(boolean isHex) {
         SPUtils.getInstance().put(SPKey.SETTING_SEND_TYPE, isHex);
+        isHexSend = isHex;
     }
 
     public void refreshReceiveType(boolean isHex) {
         SPUtils.getInstance().put(SPKey.SETTING_RECEIVE_TYPE, isHex);
+        isHexReceive = isHex;
     }
 
     private void registerSendRepeat(boolean checked) {
+        if (mSerialPort == null) {
+            ToastUtils.showLong("请先打开串口！");
+            return;
+        }
+
         disposable(mSendRepeatDisposable);
 
         if (checked) {

@@ -1,9 +1,9 @@
 package com.deemons.serialportlib;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-
 
 public class ByteUtils {
 
@@ -167,5 +167,44 @@ public class ByteUtils {
             src[src.length - i - 1] = temp1;
         }
         return src;
+    }
+
+    public static String bytesToAscii(byte[] bytes, int offset, int dateLen) {
+        if ((bytes == null) || (bytes.length == 0) || (offset < 0) || (dateLen <= 0)) {
+            return null;
+        }
+        if ((offset >= bytes.length) || (bytes.length - offset < dateLen)) {
+            return null;
+        }
+
+        String asciiStr = null;
+        byte[] data = new byte[dateLen];
+        System.arraycopy(bytes, offset, data, 0, dateLen);
+        try {
+            asciiStr = new String(data, "ISO-8859-1");
+        } catch (UnsupportedEncodingException e) {
+        }
+        return asciiStr;
+    }
+
+    public static String bytesToAscii(byte[] bytes, int dateLen) {
+        return bytesToAscii(bytes, 0, dateLen);
+    }
+
+    public static String bytesToAscii(byte[] bytes) {
+        return bytesToAscii(bytes, 0, bytes.length);
+    }
+
+    /**
+     * 字符串 转 ascii bytes
+     * ISO-8859-1 码表兼容大部分码表，因此适合做中间码表
+     */
+    public static byte[] stringToAsciiBytes(String s) {
+        try {
+            return s.getBytes("ISO-8859-1");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return new byte[0];
     }
 }

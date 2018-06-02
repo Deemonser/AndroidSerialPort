@@ -1,6 +1,8 @@
 package com.deemons.androidserialport.activity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -11,7 +13,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -36,6 +40,8 @@ import com.oushangfeng.pinnedsectionitemdecoration.callback.OnHeaderClickListene
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
+
 public class MainActivity extends AppCompatActivity implements MainContract.IView {
 
     private MainPresenter mPresenter;
@@ -47,6 +53,9 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
     private boolean       isOpen;
     private boolean       isShowBottom;
     private boolean       willShow;
+
+    private boolean isFollow = true;//信息跟随到底部
+    private LinearLayoutManager mMainLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +139,8 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
         mMainRv = findViewById(R.id.main_rv);
 
         mMsgAdapter = new MsgAdapter(new ArrayList<>());
-        mMainRv.setLayoutManager(new LinearLayoutManager(this));
+        mMainLayoutManager = new LinearLayoutManager(this);
+        mMainRv.setLayoutManager(mMainLayoutManager);
         mMainRv.setAdapter(mMsgAdapter);
         GestureDetector gestureDetector =
             new GestureDetector(this, new GestureDetector.OnGestureListener() {
@@ -174,6 +184,23 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
             });
         mMainRv.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
 
+        mMainRv.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+            }
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (newState == SCROLL_STATE_IDLE) {
+                    //获取最后一个可见view的位置
+                    int lastItemPosition = mMainLayoutManager.findLastVisibleItemPosition();
+                    isFollow = mMsgAdapter.getItemCount() - lastItemPosition < 2;
+                }
+            }
+        });
+
         RecyclerView leftRv = findViewById(R.id.left_rv);
         mLeftAdapter = new LeftAdapter(new ArrayList<>());
 
@@ -201,13 +228,6 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
         mPresenter.getLeftData();
 
         mEditText = findViewById(R.id.main_edit);
-
-        mEditText.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                KeyboardUtils.hideSoftInput(this);
-            }
-            return false;
-        });
     }
 
     @Override
@@ -237,10 +257,19 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
     }
 
     @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+            KeyboardUtils.hideSoftInput(this);
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
     public void setOpen(boolean isOpen) {
         runOnUiThread(() -> {
             if (mMenuItem != null) {
-                mMenuItem.setIcon(isOpen ? R.mipmap.ic_launcher : R.mipmap.ic_close);
+                mMenuItem.setIcon(isOpen ? R.mipmap.ic_start : R.mipmap.ic_close);
             }
             this.isOpen = isOpen;
         });
@@ -253,9 +282,12 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
 
     @Override
     public void addData(MessageBean messageBean) {
+        Log.d("onReceiveSubscribe", "add = "+ messageBean.getContain());
         mMsgAdapter.addData(messageBean);
-        int position = mMsgAdapter.getItemCount() - 1;
-        mMainRv.scrollToPosition(position > 0 ? position : 0);
+        if (isFollow) {
+            int position = mMsgAdapter.getItemCount() - 1;
+            mMainRv.scrollToPosition(position > 0 ? position : 0);
+        }
     }
 
     @SuppressLint("StringFormatInvalid")
@@ -383,5 +415,11 @@ public class MainActivity extends AppCompatActivity implements MainContract.IVie
 
         alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.show();
+    }
+
+    public void jumpToGithub(View view) {
+        Uri uri = Uri.parse("https://github.com/Deemonser/AndroidSerialPort");
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
     }
 }

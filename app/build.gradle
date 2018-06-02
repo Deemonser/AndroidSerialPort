@@ -25,7 +25,6 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-
     implementation rootProject.ext.deps.appcompatV7
     implementation rootProject.ext.deps.recyclerviewV7
     implementation rootProject.ext.deps.constraintLayout
@@ -37,8 +36,10 @@ dependencies {
     implementation rootProject.ext.deps.rxJava
     implementation rootProject.ext.deps.rxAndroid
 
-    implementation "com.deemons.serialport:serialport:1.1.1"
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     implementation 'com.android.support:support-v4:27.1.1'
     implementation 'com.android.support:design:27.1.1'
+
+//    implementation project(':serialportlib')
+     implementation "com.deemons.serialport:serialport:1.2.0"
 }

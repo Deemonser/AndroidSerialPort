@@ -41,6 +41,7 @@
             <TextView
                 android:id="@+id/item_send_contain"
                 android:layout_width="wrap_content"
+                android:textIsSelectable="true"
                 android:layout_height="wrap_content"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"

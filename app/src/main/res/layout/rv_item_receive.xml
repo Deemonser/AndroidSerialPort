@@ -42,6 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#333333"
+                android:textIsSelectable="true"
                 android:textSize="14sp"
                 tools:ignore="SmallSp"
                 tools:text="AA BB CC 22 22 22 22 22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22"

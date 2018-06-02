@@ -5,6 +5,14 @@
 AndroidSerialPort 用于串口通信，由 Google 官方串口通信库迁移而来，并在此基础上做了扩展。
 
 AndroidSerialPort 支持设置 su 路径、串口路径、波特率、校验位、数据位、停止位。
+
+<br>
+
+### Demo
+通过这个串口库，做了一个串口调试工具。
+![SerialPort](https://ws1.sinaimg.cn/large/006tKfTcgy1frwt6xkjk4j30qg0fh76l.jpg)
+
+[下载apk](app-release.apk)
 <br>
 
 ### 使用
@@ -20,8 +28,8 @@ AndroidSerialPort 支持设置 su 路径、串口路径、波特率、校验位�
    ```java
    SerialPort mSerialPort = new SerialPort("/dev/ttyS1", 9600);
    //获取串口文件的输入输出流，以便数据的收发
-   InputStream inputStream = serialPort.getInputStream();
-   OutputStream outputStream = serialPort.getOutputStream();
+   InputStream is = mSerialPort.getInputStream();
+   OutputStream os = mSerialPort.getOutputStream();
    ```
 
 <br>
@@ -79,43 +87,34 @@ public SerialPort(File device, int baudRate, int parity, int dataBits, int stopB
 ##### 读数据
 
 ```java
-//开子线程，持续接收串口数据
-new Thread(() -> {
-    //获取输入流
+// 配合 Rxjava2 ，处理异常更方便
+mReceiveDisposable = Flowable.create((FlowableOnSubscribe<byte[]>) emitter -> {
     InputStream is = mSerialPort.getInputStream();
-    byte[] buffer = new byte[64];
-    while (!isInterrupted) {
-        if (mSerialPort == null || is == null) {
-            close();
-            return;
-        }
-        is.read(buffer);
-    }
-}).start();
-```
-不过，现在一般都用 Rxjava2 ，处理异常更方便
+    int available;
+    int first;
+    while (!isInterrupted && mSerialPort != null 
+           && is != null && (first = is.read()) != -1) {
+        do {
+            available = is.available();
+            SystemClock.sleep(1);
+        } while (available != is.available());
 
-```java
-Flowable.create((FlowableOnSubscribe<byte[]>) emitter -> {
-            InputStream is = mSerialPort.getInputStream();
-            byte[] buffer = new byte[1];
-            while (!isInterrupted) {
-                if (mSerialPort == null || is == null) {
-                    close();
-                    return;
-                }
-                is.read(buffer);
-                emitter.onNext(buffer);
-            }
-        }, BackpressureStrategy.LATEST)
+        byte[] bytes = new byte[is.available()+1];
+        is.read(bytes,1,is.available());
+        bytes[0] = (byte) (first & 0xFF);
+        emitter.onNext(bytes);
+    }
+    close();
+}, BackpressureStrategy.MISSING)
 ```
+
 
 ##### 写数据
 
 ```java
 //获取输出流
-OutputStream outputStream = mSerialPort.getOutputStream();
-outputStream.write(ByteUtils.hexStringToBytes("CCAA0300"));
+OutputStream os = mSerialPort.getOutputStream();
+os.write(ByteUtils.hexStringToBytes("CCAA0300"));
 ```
 
 <br>
