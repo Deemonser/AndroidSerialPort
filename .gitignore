@@ -14,3 +14,5 @@
 app/libs/
 serialportlib/libs/
 serialportlib/src/main/res/drawable/
+
+!app-release.apk
