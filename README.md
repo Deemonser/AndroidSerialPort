@@ -20,7 +20,7 @@ AndroidSerialPort 支持设置 su 路径、串口路径、波特率、校验位�
 1. 在 modul 下的 build.gradle 中添加
 
    ```groovy
-   implementation "com.deemons.serialport:serialport:1.1.0"
+   implementation "com.deemons.serialport:serialport:xxx"	//替换版本号
    ```
 
 2. 打开串口
