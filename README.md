@@ -12,7 +12,7 @@ AndroidSerialPort 支持设置 su 路径、串口路径、波特率、校验位�
 通过这个串口库，做了一个串口调试工具。
 ![SerialPort](https://ws1.sinaimg.cn/large/006tKfTcgy1frwt6xkjk4j30qg0fh76l.jpg)
 
-[下载apk](app-release.apk)
+[下载apk](https://fir.im/dv9j)
 <br>
 
 ### 使用
