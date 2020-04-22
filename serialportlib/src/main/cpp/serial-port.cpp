@@ -147,6 +147,8 @@ Java_com_deemons_serialportlib_SerialPort_open
             case 2: cfg.c_cflag |= CSTOPB; break;
         }
 
+		cfg.c_cflag &= ~CRTSCTS;
+		
         if (tcsetattr(fd, TCSANOW, &cfg))
         {
             LOGE("tcsetattr() failed");
